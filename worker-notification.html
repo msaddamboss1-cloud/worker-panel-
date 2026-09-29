@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Panel - Notification Sender</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background: #090d16; color: #fff; max-width: 500px; margin: 0 auto; padding: 15px; }
+        
+        .header-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; border-bottom: 1px solid #1f2a3e; padding-bottom: 12px; }
+        .back-btn { font-size: 18px; color: #fff; text-decoration: none; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; background: #141a26; border: 1px solid #1f2a3e; border-radius: 50%; transition: 0.2s; }
+        .back-btn:active { transform: scale(0.95); }
+
+        .card { background: #141a26; border: 1px solid #1f2a3e; padding: 18px; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        h3 { color: #00e5ff; margin-bottom: 16px; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+        
+        .form-group { margin-bottom: 14px; }
+        label { font-size: 13px; color: #a0aec0; display: block; margin-bottom: 6px; font-weight: 600; }
+        input, select, textarea { width: 100%; padding: 12px; background: #0d111a; border: 1px solid #1f2a3e; color: #fff; border-radius: 8px; outline: none; font-size: 14px; }
+        input:focus, select:focus, textarea:focus { border-color: #00e5ff; }
+        textarea { resize: none; height: 85px; }
+
+        /* Room Switch Design */
+        .toggle-box { display: flex; align-items: center; justify-content: space-between; background: #0d111a; padding: 12px; border-radius: 8px; border: 1px solid #1f2a3e; margin-bottom: 14px; }
+        .toggle-box span { font-size: 13px; font-weight: bold; color: #00e5ff; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #1f2a3e; transition: .3s; border-radius: 22px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: #ff2a6d; }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        .btn-send { width: 100%; background: #ff2a6d; color: #fff; border: none; padding: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn-send:hover { background: #e0235e; }
+        .btn-send:active { transform: scale(0.98); }
+
+        .history-item { background: #0d111a; border: 1px solid #1f2a3e; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
+        .history-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .history-worker { color: #00e5ff; font-weight: bold; font-size: 12px; }
+        .history-target { background: rgba(255, 42, 109, 0.2); color: #ff2a6d; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+        .history-time { font-size: 10px; color: #64748b; margin-top: 8px; text-align: right; }
+    </style>
+</head>
+<body>
+
+    <div class="header-bar">
+        <!-- ড্যাশবোর্ডের সাথে সম্পর্কিত ব্যাক বাটন -->
+        <a href="dashboard.html" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <h2 style="font-size: 18px; color: #fff;">Worker Notification Panel</h2>
+    </div>
+
+    <div class="card">
+        <h3><i class="fa-solid fa-paper-plane"></i> নোটিফিকেশন পাঠান</h3>
+        
+        <div class="form-group">
+            <label>ওয়ার্কার নাম / আইডি</label>
+            <input type="text" id="worker-name" placeholder="যেমন: Worker-1">
+        </div>
+
+        <div class="form-group">
+            <label>কাদের পাঠাবেন (Target Audience)</label>
+            <select id="target-type">
+                <option value="ALL">সকল ইউজার (All Users)</option>
+                <option value="MATCH_USERS">নির্দিষ্ট ম্যাচের ইউজার (Match Players)</option>
+                <option value="SINGLE_USER">নির্দিষ্ট ইউজার (User ID / Phone)</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="match-id-group" style="display: none;">
+            <label>ম্যাচ আইডি (Match ID)</label>
+            <input type="text" id="match-id" placeholder="যেমন: MATCH123">
+        </div>
+
+        <div class="form-group" id="single-user-group" style="display: none;">
+            <label>ইউজার আইডি / ফোন নম্বর</label>
+            <input type="text" id="single-user-id" placeholder="যেমন: USER_9983">
+        </div>
+
+        <div class="form-group">
+            <label>নোটিফিকেশন টাইটেল</label>
+            <input type="text" id="notif-title" placeholder="যেমন: রুম আইডি দেওয়া হয়েছে!">
+        </div>
+
+        <div class="form-group">
+            <label>বিবরণ / নোটিশ মেসেজ</label>
+            <textarea id="notif-body" placeholder="যেমন: দ্রুত জয়েন করুন, ম্যাচ শুরু হতে ২ মিনিট বাকি!"></textarea>
+        </div>
+
+        <!-- রুম আইডি ও পাসওয়ার্ড সেকশন অন/অফ করার সুইচ -->
+        <div class="toggle-box">
+            <span>রুম আইডি ও পাসওয়ার্ড যুক্ত করবেন?</span>
+            <label class="switch">
+                <input type="checkbox" id="room-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div id="room-input-section" style="display: none;">
+            <div class="form-group">
+                <label>রুম আইডি (Room ID)</label>
+                <input type="text" id="room-id" placeholder="যেমন: 882910">
+            </div>
+            <div class="form-group">
+                <label>পাসওয়ার্ড (Password)</label>
+                <input type="text" id="room-pass" placeholder="যেমন: 1234">
+            </div>
+        </div>
+
+        <button class="btn-send" onclick="handleNotificationSubmit()"><i class="fa-solid fa-bell"></i> সেন্ড নোটিফিকেশন</button>
+    </div>
+
+    <!-- ইতিহাস সেকশন -->
+    <div class="card">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> ওয়ার্কার প্যানেল হিস্ট্রি</h3>
+        <div id="sent-history">
+            <p style="color:#64748b; font-size:13px; text-align:center;">কোনো প্রেরিত ইতিহাস নেই</p>
+        </div>
+    </div>
+
+    <script>
+        // টার্গেট পরিবর্তন লজিক
+        document.getElementById('target-type').addEventListener('change', (e) => {
+            document.getElementById('match-id-group').style.display = e.target.value === 'MATCH_USERS' ? 'block' : 'none';
+            document.getElementById('single-user-group').style.display = e.target.value === 'SINGLE_USER' ? 'block' : 'none';
+        });
+
+        // রুম আইডি টগল লজিক
+        document.getElementById('room-toggle').addEventListener('change', (e) => {
+            document.getElementById('room-input-section').style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        // নোটিফিকেশন সেন্ড সাবমিট হ্যাণ্ডলার
+        function handleNotificationSubmit() {
+            const title = document.getElementById('notif-title').value;
+            const message = document.getElementById('notif-body').value;
+
+            if(!title || !message) {
+                alert("অনুগ্রহ করে টাইটেল এবং বিবরণ লিখুন!");
+                return;
+            }
+
+            alert("নোটিফিকেশন সাবমিট হয়েছে!");
+            
+            // ইনপুট রিসেট
+            document.getElementById('notif-title').value = '';
+            document.getElementById('notif-body').value = '';
+            document.getElementById('match-id').value = '';
+            document.getElementById('single-user-id').value = '';
+            document.getElementById('room-id').value = '';
+            document.getElementById('room-pass').value = '';
+        }
+    </script>
+</body>
+</html>

@@ -30,6 +30,7 @@
         input:checked + .slider:before { transform: translateX(22px); }
 
         .btn-send { width: 100%; background: #ff2a6d; color: #fff; border: none; padding: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-send:disabled { opacity: 0.6; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -103,14 +104,14 @@
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyA8jX_M4iqwdMm-RP10CUjd664GZrnrmQA",
-            authDomain: "rz-mod-menu.firebaseapp.com",
-            databaseURL: "https://rz-mod-menu-default-rtdb.firebaseio.com",
-            projectId: "rz-mod-menu",
-            storageBucket: "rz-mod-menu.firebasestorage.app",
-            messagingSenderId: "426988321516",
-            appId: "1:426988321516:web:33c8fd9492ee0ad58b03c9",
-            measurementId: "G-EDC9TH795S"
+          apiKey: "AIzaSyA8jX_M4iqwdMm-RP10CUjd664GZrnrmQA",
+          authDomain: "rz-mod-menu.firebaseapp.com",
+          databaseURL: "https://rz-mod-menu-default-rtdb.firebaseio.com",
+          projectId: "rz-mod-menu",
+          storageBucket: "rz-mod-menu.firebasestorage.app",
+          messagingSenderId: "426988321516",
+          appId: "1:426988321516:web:33c8fd9492ee0ad58b03c9",
+          measurementId: "G-EDC9TH795S"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -126,6 +127,7 @@
         });
 
         document.getElementById('send-btn').addEventListener('click', async () => {
+            const sendBtn = document.getElementById('send-btn');
             const workerName = document.getElementById('worker-name').value || "Worker";
             const target = document.getElementById('target-type').value;
             const matchId = document.getElementById('match-id').value;
@@ -140,6 +142,9 @@
                 alert("টাইটেল এবং বিবরণ টাইপ করুন!");
                 return;
             }
+
+            sendBtn.disabled = true;
+            sendBtn.innerText = "পাঠানো হচ্ছে...";
 
             try {
                 await addDoc(collection(db, "notifications"), {
@@ -162,8 +167,11 @@
                 document.getElementById('room-pass').value = '';
 
             } catch (err) {
-                console.error("Error:", err);
-                alert("পাঠাতে ব্যর্থ হয়েছে! আবার চেষ্টা করুন।");
+                console.error("Firebase Error Details:", err);
+                alert("পাঠাতে ব্যর্থ হয়েছে! ফায়ারবেস রুলস চেক করুন। error: " + err.message);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = `<i class="fa-solid fa-bell"></i> সেন্ড নোটিফিকেশন`;
             }
         });
     </script>

@@ -10,19 +10,16 @@
         body { background: #090d16; color: #fff; max-width: 500px; margin: 0 auto; padding: 15px; }
         
         .header-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; border-bottom: 1px solid #1f2a3e; padding-bottom: 12px; }
-        .back-btn { font-size: 18px; color: #fff; text-decoration: none; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; background: #141a26; border: 1px solid #1f2a3e; border-radius: 50%; transition: 0.2s; }
-        .back-btn:active { transform: scale(0.95); }
+        .back-btn { font-size: 18px; color: #fff; text-decoration: none; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; background: #141a26; border: 1px solid #1f2a3e; border-radius: 50%; }
 
-        .card { background: #141a26; border: 1px solid #1f2a3e; padding: 18px; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .card { background: #141a26; border: 1px solid #1f2a3e; padding: 18px; border-radius: 14px; margin-bottom: 20px; }
         h3 { color: #00e5ff; margin-bottom: 16px; font-size: 17px; display: flex; align-items: center; gap: 8px; }
         
         .form-group { margin-bottom: 14px; }
         label { font-size: 13px; color: #a0aec0; display: block; margin-bottom: 6px; font-weight: 600; }
         input, select, textarea { width: 100%; padding: 12px; background: #0d111a; border: 1px solid #1f2a3e; color: #fff; border-radius: 8px; outline: none; font-size: 14px; }
-        input:focus, select:focus, textarea:focus { border-color: #00e5ff; }
-        textarea { resize: none; height: 85px; }
+        textarea { resize: none; height: 80px; }
 
-        /* Room Switch Design */
         .toggle-box { display: flex; align-items: center; justify-content: space-between; background: #0d111a; padding: 12px; border-radius: 8px; border: 1px solid #1f2a3e; margin-bottom: 14px; }
         .toggle-box span { font-size: 13px; font-weight: bold; color: #00e5ff; }
         .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
@@ -32,24 +29,13 @@
         input:checked + .slider { background-color: #ff2a6d; }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        .btn-send { width: 100%; background: #ff2a6d; color: #fff; border: none; padding: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
-        .btn-send:hover { background: #e0235e; }
-        .btn-send:active { transform: scale(0.98); }
-
-        .history-item { background: #0d111a; border: 1px solid #1f2a3e; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
-        .history-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
-        .history-worker { color: #00e5ff; font-weight: bold; font-size: 12px; }
-        .history-target { background: rgba(255, 42, 109, 0.2); color: #ff2a6d; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
-        .history-time { font-size: 10px; color: #64748b; margin-top: 8px; text-align: right; }
+        .btn-send { width: 100%; background: #ff2a6d; color: #fff; border: none; padding: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
     </style>
 </head>
 <body>
 
     <div class="header-bar">
-        <!-- ড্যাশবোর্ডের সাথে সম্পর্কিত ব্যাক বাটন -->
-        <a href="dashboard.html" class="back-btn">
-            <i class="fa-solid fa-arrow-left"></i>
-        </a>
+        <a href="dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
         <h2 style="font-size: 18px; color: #fff;">Worker Notification Panel</h2>
     </div>
 
@@ -90,7 +76,6 @@
             <textarea id="notif-body" placeholder="যেমন: দ্রুত জয়েন করুন, ম্যাচ শুরু হতে ২ মিনিট বাকি!"></textarea>
         </div>
 
-        <!-- রুম আইডি ও পাসওয়ার্ড সেকশন অন/অফ করার সুইচ -->
         <div class="toggle-box">
             <span>রুম আইডি ও পাসওয়ার্ড যুক্ত করবেন?</span>
             <label class="switch">
@@ -110,49 +95,77 @@
             </div>
         </div>
 
-        <button class="btn-send" onclick="handleNotificationSubmit()"><i class="fa-solid fa-bell"></i> সেন্ড নোটিফিকেশন</button>
+        <button class="btn-send" id="send-btn"><i class="fa-solid fa-bell"></i> সেন্ড নোটিফিকেশন</button>
     </div>
 
-    <!-- ইতিহাস সেকশন -->
-    <div class="card">
-        <h3><i class="fa-solid fa-clock-rotate-left"></i> ওয়ার্কার প্যানেল হিস্ট্রি</h3>
-        <div id="sent-history">
-            <p style="color:#64748b; font-size:13px; text-align:center;">কোনো প্রেরিত ইতিহাস নেই</p>
-        </div>
-    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-    <script>
-        // টার্গেট পরিবর্তন লজিক
+        const firebaseConfig = {
+            apiKey: "AIzaSyA8jX_M4iqwdMm-RP10CUjd664GZrnrmQA",
+            authDomain: "rz-mod-menu.firebaseapp.com",
+            databaseURL: "https://rz-mod-menu-default-rtdb.firebaseio.com",
+            projectId: "rz-mod-menu",
+            storageBucket: "rz-mod-menu.firebasestorage.app",
+            messagingSenderId: "426988321516",
+            appId: "1:426988321516:web:33c8fd9492ee0ad58b03c9",
+            measurementId: "G-EDC9TH795S"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         document.getElementById('target-type').addEventListener('change', (e) => {
             document.getElementById('match-id-group').style.display = e.target.value === 'MATCH_USERS' ? 'block' : 'none';
             document.getElementById('single-user-group').style.display = e.target.value === 'SINGLE_USER' ? 'block' : 'none';
         });
 
-        // রুম আইডি টগল লজিক
         document.getElementById('room-toggle').addEventListener('change', (e) => {
             document.getElementById('room-input-section').style.display = e.target.checked ? 'block' : 'none';
         });
 
-        // নোটিফিকেশন সেন্ড সাবমিট হ্যাণ্ডলার
-        function handleNotificationSubmit() {
+        document.getElementById('send-btn').addEventListener('click', async () => {
+            const workerName = document.getElementById('worker-name').value || "Worker";
+            const target = document.getElementById('target-type').value;
+            const matchId = document.getElementById('match-id').value;
+            const singleUserId = document.getElementById('single-user-id').value;
             const title = document.getElementById('notif-title').value;
             const message = document.getElementById('notif-body').value;
+            const hasRoomDetails = document.getElementById('room-toggle').checked;
+            const roomId = document.getElementById('room-id').value;
+            const roomPass = document.getElementById('room-pass').value;
 
             if(!title || !message) {
-                alert("অনুগ্রহ করে টাইটেল এবং বিবরণ লিখুন!");
+                alert("টাইটেল এবং বিবরণ টাইপ করুন!");
                 return;
             }
 
-            alert("নোটিফিকেশন সাবমিট হয়েছে!");
-            
-            // ইনপুট রিসেট
-            document.getElementById('notif-title').value = '';
-            document.getElementById('notif-body').value = '';
-            document.getElementById('match-id').value = '';
-            document.getElementById('single-user-id').value = '';
-            document.getElementById('room-id').value = '';
-            document.getElementById('room-pass').value = '';
-        }
+            try {
+                await addDoc(collection(db, "notifications"), {
+                    worker: workerName,
+                    target: target,
+                    matchId: target === 'MATCH_USERS' ? matchId : '',
+                    singleUserId: target === 'SINGLE_USER' ? singleUserId : '',
+                    title: title,
+                    message: message,
+                    hasRoomDetails: hasRoomDetails,
+                    roomId: hasRoomDetails ? roomId : '',
+                    roomPass: hasRoomDetails ? roomPass : '',
+                    timestamp: serverTimestamp()
+                });
+
+                alert("নোটিফিকেশন সফলভাবে পাঠানো হয়েছে!");
+                document.getElementById('notif-title').value = '';
+                document.getElementById('notif-body').value = '';
+                document.getElementById('room-id').value = '';
+                document.getElementById('room-pass').value = '';
+
+            } catch (err) {
+                console.error("Error:", err);
+                alert("পাঠাতে ব্যর্থ হয়েছে! আবার চেষ্টা করুন।");
+            }
+        });
     </script>
 </body>
 </html>

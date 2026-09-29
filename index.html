@@ -3,23 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Worker Panel - Notification Sender</title>
+    <title>Worker Panel - FF ZONE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
         body { background: #090d16; color: #fff; max-width: 500px; margin: 0 auto; padding: 15px; }
-        
-        .header-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; border-bottom: 1px solid #1f2a3e; padding-bottom: 12px; }
-        .back-btn { font-size: 18px; color: #fff; text-decoration: none; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; background: #141a26; border: 1px solid #1f2a3e; border-radius: 50%; }
-
-        .card { background: #141a26; border: 1px solid #1f2a3e; padding: 18px; border-radius: 14px; margin-bottom: 20px; }
-        h3 { color: #00e5ff; margin-bottom: 16px; font-size: 17px; display: flex; align-items: center; gap: 8px; }
-        
+        .card { background: #141a26; border: 1px solid #1f2a3e; padding: 18px; border-radius: 14px; }
+        h3 { color: #00e5ff; margin-bottom: 16px; font-size: 17px; }
         .form-group { margin-bottom: 14px; }
-        label { font-size: 13px; color: #a0aec0; display: block; margin-bottom: 6px; font-weight: 600; }
-        input, select, textarea { width: 100%; padding: 12px; background: #0d111a; border: 1px solid #1f2a3e; color: #fff; border-radius: 8px; outline: none; font-size: 14px; }
+        label { font-size: 13px; color: #a0aec0; display: block; margin-bottom: 6px; }
+        input, textarea { width: 100%; padding: 12px; background: #0d111a; border: 1px solid #1f2a3e; color: #fff; border-radius: 8px; outline: none; }
         textarea { resize: none; height: 80px; }
-
+        
         .toggle-box { display: flex; align-items: center; justify-content: space-between; background: #0d111a; padding: 12px; border-radius: 8px; border: 1px solid #1f2a3e; margin-bottom: 14px; }
         .toggle-box span { font-size: 13px; font-weight: bold; color: #00e5ff; }
         .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
@@ -29,43 +24,14 @@
         input:checked + .slider { background-color: #ff2a6d; }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        .btn-send { width: 100%; background: #ff2a6d; color: #fff; border: none; padding: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-send:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-send { width: 100%; background: #ff2a6d; color: #fff; border: none; padding: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 15px; }
+        .btn-send:disabled { opacity: 0.5; }
     </style>
 </head>
 <body>
 
-    <div class="header-bar">
-        <a href="dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
-        <h2 style="font-size: 18px; color: #fff;">Worker Notification Panel</h2>
-    </div>
-
     <div class="card">
-        <h3><i class="fa-solid fa-paper-plane"></i> নোটিফিকেশন পাঠান</h3>
-        
-        <div class="form-group">
-            <label>ওয়ার্কার নাম / আইডি</label>
-            <input type="text" id="worker-name" placeholder="যেমন: Worker-1">
-        </div>
-
-        <div class="form-group">
-            <label>কাদের পাঠাবেন (Target Audience)</label>
-            <select id="target-type">
-                <option value="ALL">সকল ইউজার (All Users)</option>
-                <option value="MATCH_USERS">নির্দিষ্ট ম্যাচের ইউজার (Match Players)</option>
-                <option value="SINGLE_USER">নির্দিষ্ট ইউজার (User ID / Phone)</option>
-            </select>
-        </div>
-
-        <div class="form-group" id="match-id-group" style="display: none;">
-            <label>ম্যাচ আইডি (Match ID)</label>
-            <input type="text" id="match-id" placeholder="যেমন: MATCH123">
-        </div>
-
-        <div class="form-group" id="single-user-group" style="display: none;">
-            <label>ইউজার আইডি / ফোন নম্বর</label>
-            <input type="text" id="single-user-id" placeholder="যেমন: USER_9983">
-        </div>
+        <h3><i class="fa-solid fa-paper-plane"></i> নোটিফিকেশন পাঠান (FF ZONE)</h3>
 
         <div class="form-group">
             <label>নোটিফিকেশন টাইটেল</label>
@@ -103,6 +69,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
+        const ONESIGNAL_APP_ID = "38b4db47-c5c2-4bb5-a56c-4bca3f708444";
+        const ONESIGNAL_REST_API_KEY = "Os_v2_app_hc2nwr6fyjf3ljlmjpfd64eeiqmyf2prle6ejs4rkvytepttvi45usjohg2eoe32mqvxsro6oyuub7manbsnbyb4idhyl7nzakso7ry";
+
         const firebaseConfig = {
           apiKey: "AIzaSyA8jX_M4iqwdMm-RP10CUjd664GZrnrmQA",
           authDomain: "rz-mod-menu.firebaseapp.com",
@@ -117,21 +86,34 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        document.getElementById('target-type').addEventListener('change', (e) => {
-            document.getElementById('match-id-group').style.display = e.target.value === 'MATCH_USERS' ? 'block' : 'none';
-            document.getElementById('single-user-group').style.display = e.target.value === 'SINGLE_USER' ? 'block' : 'none';
-        });
-
         document.getElementById('room-toggle').addEventListener('change', (e) => {
             document.getElementById('room-input-section').style.display = e.target.checked ? 'block' : 'none';
         });
 
+        // OneSignal API কল করে সব ফোনে সিস্টেমে পপ-আপ মেসেজ পাঠানো
+        async function sendPushToAll(title, message) {
+            try {
+                await fetch("https://onesignal.com/api/v1/notifications", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json; charset=utf-8",
+                        "Authorization": "Basic " + ONESIGNAL_REST_API_KEY
+                    },
+                    body: JSON.stringify({
+                        app_id: ONESIGNAL_APP_ID,
+                        included_segments: ["All"],
+                        headings: { "en": title },
+                        contents: { "en": message },
+                        chrome_web_icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
+                    })
+                });
+            } catch (e) {
+                console.error("Push Error:", e);
+            }
+        }
+
         document.getElementById('send-btn').addEventListener('click', async () => {
             const sendBtn = document.getElementById('send-btn');
-            const workerName = document.getElementById('worker-name').value || "Worker";
-            const target = document.getElementById('target-type').value;
-            const matchId = document.getElementById('match-id').value;
-            const singleUserId = document.getElementById('single-user-id').value;
             const title = document.getElementById('notif-title').value;
             const message = document.getElementById('notif-body').value;
             const hasRoomDetails = document.getElementById('room-toggle').checked;
@@ -147,11 +129,8 @@
             sendBtn.innerText = "পাঠানো হচ্ছে...";
 
             try {
+                // ১. ডাটাবেজে সেভ
                 await addDoc(collection(db, "notifications"), {
-                    worker: workerName,
-                    target: target,
-                    matchId: target === 'MATCH_USERS' ? matchId : '',
-                    singleUserId: target === 'SINGLE_USER' ? singleUserId : '',
                     title: title,
                     message: message,
                     hasRoomDetails: hasRoomDetails,
@@ -160,6 +139,9 @@
                     timestamp: serverTimestamp()
                 });
 
+                // ২. সিস্টেম পুশ নোটিফিকেশন ফায়ার করা
+                await sendPushToAll(title, message);
+
                 alert("নোটিফিকেশন সফলভাবে পাঠানো হয়েছে!");
                 document.getElementById('notif-title').value = '';
                 document.getElementById('notif-body').value = '';
@@ -167,11 +149,10 @@
                 document.getElementById('room-pass').value = '';
 
             } catch (err) {
-                console.error("Firebase Error Details:", err);
-                alert("পাঠাতে ব্যর্থ হয়েছে! ফায়ারবেস রুলস চেক করুন। error: " + err.message);
+                alert("এরর: " + err.message);
             } finally {
                 sendBtn.disabled = false;
-                sendBtn.innerHTML = `<i class="fa-solid fa-bell"></i> সেন্ড নোটিফিকেশন`;
+                sendBtn.innerText = "সেন্ড নোটিফিকেশন";
             }
         });
     </script>
